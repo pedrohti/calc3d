@@ -15,7 +15,6 @@
   <script>
     window.onload = function() {
       document.querySelector('iframe')
-        .requestFullscreen()
         .catch((err) => {
           console.error('Error attempting to enable full-screen mode:', err.message);
         });
