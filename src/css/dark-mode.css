@@ -209,6 +209,19 @@ input::placeholder {
 
 .extra-desc { flex: 2; }
 .extra-val { flex: 1; }
+.extra-recibo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  padding-bottom: 10px;
+}
+.extra-recibo input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
 
 /* Peça rows */
 .peca-labels {
