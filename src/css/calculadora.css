@@ -24,9 +24,13 @@
 
 .panel + .panel { margin-top: 20px; }
 
-.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; cursor: pointer; user-select: none; }
 .panel-header .icon { font-size: 1.2rem; }
 .panel-header h3 { margin: 0; color: var(--text-main); font-size: 1.05rem; font-weight: 600; }
+.panel-toggle { margin-left: auto; font-size: 0.85rem; color: var(--text-muted); transition: transform 0.2s; line-height: 1; }
+.panel--collapsed .panel-toggle { transform: rotate(-90deg); }
+.panel--collapsed > *:not(.panel-header) { display: none; }
+.panel--collapsed .panel-header { margin-bottom: 0; }
 
 input:disabled {
   opacity: 0.5;
@@ -81,16 +85,25 @@ input:disabled {
 .pricing-card.consumer { background: rgba(34, 197, 94, 0.07); border-color: rgba(34, 197, 94, 0.25); }
 .pricing-card.wholesale { background: rgba(139, 92, 246, 0.07); border-color: rgba(139, 92, 246, 0.25); }
 .pricing-card.personal { background: rgba(245, 158, 11, 0.07); border-color: rgba(245, 158, 11, 0.25); }
+.pricing-card.shopee { background: rgba(238, 77, 45, 0.07); border-color: rgba(238, 77, 45, 0.25); }
+.pricing-card.ml { background: rgba(255, 230, 0, 0.07); border-color: rgba(255, 230, 0, 0.25); }
+.pricing-card.tiktok { background: rgba(0, 180, 216, 0.07); border-color: rgba(0, 180, 216, 0.25); }
 
 .pricing-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
 .pricing-label.consumer { color: #22c55e; }
 .pricing-label.wholesale { color: #8b5cf6; }
 .pricing-label.personal { color: #f59e0b; }
+.pricing-label.shopee { color: #ee4d2d; }
+.pricing-label.ml { color: #c9a800; }
+.pricing-label.tiktok { color: #00b4d8; }
 
 .pricing-main { font-size: 1.4rem; font-weight: 700; font-family: 'Courier New', monospace; margin-bottom: 6px; }
 .pricing-main.consumer { color: #22c55e; }
 .pricing-main.wholesale { color: #8b5cf6; }
 .pricing-main.personal { color: #f59e0b; }
+.pricing-main.shopee { color: #ee4d2d; }
+.pricing-main.ml { color: #c9a800; }
+.pricing-main.tiktok { color: #00b4d8; }
 
 .pricing-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 .pricing-sub span { font-family: 'Courier New', monospace; font-weight: 600; color: var(--text-main); }
