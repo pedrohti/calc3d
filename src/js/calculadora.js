@@ -31,6 +31,7 @@ function adicionarPeca() {
       <input type="text" class="peca-nome" placeholder="ex: Suporte de Fone">
       <input type="text" class="peca-horas" placeholder="ex: 3:30 ou 2.5" oninput="calcular()">
       <input type="number" class="peca-peso" placeholder="0" step="0.01" oninput="calcular()">
+      <input type="number" class="peca-qtd" value="1" min="1" step="1" oninput="calcular()">
       <button type="button" class="btn-remove" onclick="removerPeca(this)">✕</button>
     `;
     document.getElementById("container-pecas").appendChild(div);
@@ -69,10 +70,12 @@ function calcularValores() {
     const pKwh   = val("p_kwh");
     const watts  = val("p_watts");
 
-    let horas = 0, peso = 0;
+    let horas = 0, peso = 0, quantidade = 0;
     document.querySelectorAll(".peca-row").forEach(r => {
-        horas += parseHoras(r.querySelector(".peca-horas")?.value);
-        peso  += Number(r.querySelector(".peca-peso")?.value) || 0;
+        const qtd = Math.max(Math.round(Number(r.querySelector(".peca-qtd")?.value) || 1), 1);
+        horas    += parseHoras(r.querySelector(".peca-horas")?.value) * qtd;
+        peso     += (Number(r.querySelector(".peca-peso")?.value) || 0) * qtd;
+        quantidade += qtd;
     });
 
     const consumoKwh     = (watts * horas) / 1000;
@@ -83,8 +86,8 @@ function calcularValores() {
     const embalagensRolo     = Math.max(val("p_embalagens_rolo"), 1);
     const unidadesMes        = Math.max(val("p_unidades_mes"), 1);
     const custoFixoMensal    = val("p_custo_fixo");
-    const custoEmbalagem     = valorRoloEmbalagem / embalagensRolo;
-    const custoFixo          = custoFixoMensal / unidadesMes;
+    const custoEmbalagem     = (valorRoloEmbalagem / embalagensRolo) * quantidade;
+    const custoFixo          = (custoFixoMensal / unidadesMes) * quantidade;
 
     const valorImpressora = val("p_impressora");
     const vidaUtilHoras   = Math.max(val("p_vida_util"), 1);
@@ -133,6 +136,9 @@ const lucroPct         = val("p_lucro_pct");
     const lucroML       = precoML      - feeML;
     const lucroTikTok   = precoTikTok  - feeTikTok;
 
+    const custoUnitario = custoTotal / quantidade;
+    const precoUnitario = precoVenda / quantidade;
+
     return {
         consumoKwh, custoFilamento, custoEnergia, custoEmbalagem, custoFixo,
         amortizacao, totalExtras, frete, custoFalhas, custoTotal, taxaFalha,
@@ -143,6 +149,7 @@ const lucroPct         = val("p_lucro_pct");
         taxaShopee, taxaML, taxaTikTok,
         precoShopee, precoML, precoTikTok,
         lucroShopee, lucroML, lucroTikTok,
+        quantidade, custoUnitario, precoUnitario,
     };
 }
 
@@ -160,6 +167,15 @@ function calcular() {
     setTxt("res_frete",       v.frete);
     setTxt("res_falhas",      v.custoFalhas);
     setTxt("res_custo_total", v.custoTotal);
+
+    const rowUnitario = document.getElementById("row_custo_unitario");
+    if (v.quantidade > 1) {
+        rowUnitario.style.display = "";
+        document.getElementById("lbl_quantidade").textContent = v.quantidade;
+        setTxt("res_custo_unitario", v.custoUnitario);
+    } else {
+        rowUnitario.style.display = "none";
+    }
 
     document.getElementById("lbl_falha").textContent   = v.taxaFalha;
     document.getElementById("lbl_imposto").textContent = v.imposto;
@@ -217,6 +233,8 @@ function gerarRecibo() {
     const cliente    = document.getElementById("p_cliente").value || "";
     const observacao = document.getElementById("p_observacao").value || "";
 
+    const quantidade  = v.quantidade;
+
     const pecas = [...document.querySelectorAll(".peca-row")]
         .map(r => r.querySelector(".peca-nome")?.value?.trim())
         .filter(Boolean);
@@ -235,7 +253,7 @@ function gerarRecibo() {
 
     const itensHTML = [
         `<tr>
-          <td>Impressão 3D${pecas.length ? ` — ${pecas.join(", ")}` : ""}</td>
+          <td>Impressão 3D${pecas.length ? ` — ${pecas.join(", ")}` : ""}${quantidade > 1 ? ` (×${quantidade})` : ""}</td>
           <td>${fmt(precoImpressao)}</td>
         </tr>`,
         ...extrasRecibo.map(e => `<tr><td>${e.desc}</td><td>${fmt(e.val)}</td></tr>`),
@@ -245,7 +263,7 @@ function gerarRecibo() {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Recibo ${numPedido}</title>
+  <title>Recibo${numPedido ? ` ${numPedido}` : ""}${cliente ? ` — ${cliente}` : ""}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; padding: 32px; color: #111; }
@@ -288,6 +306,128 @@ function gerarRecibo() {
     w.document.write(html);
     w.document.close();
     setTimeout(() => w.print(), 800);
+}
+
+// --- EXPORTAR EXCEL ---
+function exportarExcel() {
+    const v          = calcularValores();
+    const numPedido  = document.getElementById("p_num_pedido").textContent || "";
+    const cliente    = document.getElementById("p_cliente").value || "";
+    const observacao = document.getElementById("p_observacao").value || "";
+
+    const pecas = [...document.querySelectorAll(".peca-row")].map(r => ({
+        nome:  r.querySelector(".peca-nome")?.value  || "",
+        horas: r.querySelector(".peca-horas")?.value || "0",
+        peso:  r.querySelector(".peca-peso")?.value  || "0",
+    }));
+
+    const extras = [...document.querySelectorAll(".extra-row")].map(r => ({
+        desc:   r.querySelector(".extra-desc")?.value || "",
+        val:    Number(r.querySelector(".extra-val")?.value) || 0,
+        recibo: r.querySelector(".extra-chk")?.checked ? "Sim" : "Não",
+    }));
+
+    const data  = [];
+    const sec   = (t)       => data.push([t]);
+    const row   = (...cols) => data.push(cols);
+    const blank = ()        => data.push([]);
+
+    sec("DADOS DO PEDIDO");
+    row("Número do Pedido",  numPedido);
+    row("Cliente",           cliente);
+    row("Data",              new Date().toLocaleDateString("pt-BR"));
+    row("Observação",        observacao);
+    row("Quantidade de cópias", v.quantidade);
+    blank();
+
+    sec("PEÇAS");
+    row("Nome", "Tempo (1×)", "Peso (g) (1×)");
+    pecas.forEach(p => row(p.nome, p.horas, Number(p.peso) || 0));
+    if (v.quantidade > 1) row(`TOTAL (×${v.quantidade})`, "—", "Ver custos calculados");
+    blank();
+
+    if (extras.length) {
+        sec("OUTROS CUSTOS");
+        row("Descrição", "Valor (R$)", "Inclui no Recibo");
+        extras.forEach(e => row(e.desc, e.val, e.recibo));
+        blank();
+    }
+
+    sec("PARÂMETROS DE ENTRADA");
+    row("Quantidade de cópias",        v.quantidade);
+    row("Filamento (R$/kg)",           val("p_filamento"));
+    row("Potência (W)",                val("p_watts"));
+    row("Taxa Energia (R$/kWh)",       val("p_kwh"));
+    row("Consumo Calculado (kWh)",     v.consumoKwh);
+    row("Rolo Embalagem (R$)",         val("p_rolo_embalagem"));
+    row("Embalagens por Rolo",         val("p_embalagens_rolo"));
+    row("Unidades/Mês",                val("p_unidades_mes"));
+    row("Custo Fixo Mensal (R$)",      val("p_custo_fixo"));
+    row("Impressora (R$)",             val("p_impressora"));
+    row("Vida Útil (horas)",           val("p_vida_util"));
+    row("Taxa de Falha (%)",           val("p_falha"));
+    row("Imposto (%)",                 val("p_imposto"));
+    row("Taxa Cartão (%)",             val("p_cartao"));
+    row("Custo Anúncio (%)",           val("p_anuncio"));
+    row("Markup (×)",                  val("p_markup"));
+    row("Frete (R$)",                  val("p_frete"));
+    row("Taxa Shopee (%)",             val("p_taxa_shopee"));
+    row("Taxa Mercado Livre (%)",      val("p_taxa_ml"));
+    row("Taxa TikTok Shop (%)",        val("p_taxa_tiktok"));
+    row("% de Lucro",                  val("p_lucro_pct"));
+    row("Preço de Venda Manual (R$)",  val("p_preco_venda_manual"));
+    blank();
+
+    sec("CUSTOS CALCULADOS");
+    row("Filamento",              v.custoFilamento);
+    row("Energia",                v.custoEnergia);
+    row("Embalagem",              v.custoEmbalagem);
+    row("Custo Fixo",             v.custoFixo);
+    row("Amortização",            v.amortizacao);
+    row("Extras",                 v.totalExtras);
+    row("Frete",                  v.frete);
+    row(`Falhas (${v.taxaFalha}%)`, v.custoFalhas);
+    row("CUSTO TOTAL",            v.custoTotal);
+    if (v.quantidade > 1) row(`Custo por unidade (÷${v.quantidade})`, v.custoUnitario);
+    blank();
+
+    sec("LUCRO");
+    row("% de Lucro",                 v.lucroPct);
+    row("Preço Sugerido (R$)",        v.precoSugerido);
+    row("Preço de Venda Manual (R$)", v.precoVendaManual);
+    row("Lucro Total (R$)",           v.lucroTotal);
+    blank();
+
+    sec("PRECIFICAÇÃO");
+    row("", "Preço (R$)", "Lucro Bruto (R$)", "Lucro Líquido (R$)");
+    row("Consumidor Final", v.precoVenda,   v.lucroBruto, v.lucroLiquido);
+    row("Lojista (50%)",    v.precoLojista, "",           v.lucroLiquidoLojista);
+    blank();
+
+    sec("MARKETPLACES");
+    row("Plataforma", "Taxa (%)", "Preço (R$)", "Lucro Líquido (R$)");
+    if (v.taxaShopee  > 0) row("Shopee",       v.taxaShopee,  v.precoShopee,  v.lucroShopee);
+    if (v.taxaML      > 0) row("Mercado Livre", v.taxaML,      v.precoML,      v.lucroML);
+    if (v.taxaTikTok  > 0) row("TikTok Shop",   v.taxaTikTok,  v.precoTikTok,  v.lucroTikTok);
+    blank();
+
+    sec("TAXAS SOBRE VENDA");
+    row("Descrição", "Taxa (%)", "Valor (R$)");
+    row("Imposto",  v.imposto,      v.valorImposto);
+    row("Cartão",   v.taxaCartao,   v.valorCartao);
+    row("Anúncio",  v.custoAnuncio, v.valorAnuncio);
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{ wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cálculo 3D");
+
+    const slugPedido  = numPedido.replace(/[^a-z0-9]/gi, "_");
+    const slugCliente = cliente.replace(/[^a-z0-9]/gi, "_");
+    const slugBase    = [slugPedido, slugCliente].filter(Boolean).join("_") || "calculo";
+    const filename    = `calculo_${slugBase}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
 }
 
 // --- SALVAR CÁLCULO ---
@@ -340,7 +480,7 @@ function salvarCalculo() {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cálculo ${numPedido} — ${nomesPecas}</title>
+  <title>Cálculo${numPedido ? ` ${numPedido}` : ""}${cliente ? ` — ${cliente}` : ""}</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px; color: #111; line-height: 1.5; }
     h1 { color: #1d4ed8; border-bottom: 2px solid #1d4ed8; padding-bottom: 8px; margin-bottom: 4px; }
@@ -454,4 +594,126 @@ function salvarCalculo() {
     w.document.write(html);
     w.document.close();
     setTimeout(() => w.print(), 800);
+}
+
+// --- EXPORTAR EXCEL ---
+function exportarExcel() {
+    const v          = calcularValores();
+    const numPedido  = document.getElementById("p_num_pedido").textContent || "";
+    const cliente    = document.getElementById("p_cliente").value || "";
+    const observacao = document.getElementById("p_observacao").value || "";
+
+    const pecas = [...document.querySelectorAll(".peca-row")].map(r => ({
+        nome:  r.querySelector(".peca-nome")?.value  || "",
+        horas: r.querySelector(".peca-horas")?.value || "0",
+        peso:  r.querySelector(".peca-peso")?.value  || "0",
+    }));
+
+    const extras = [...document.querySelectorAll(".extra-row")].map(r => ({
+        desc:   r.querySelector(".extra-desc")?.value || "",
+        val:    Number(r.querySelector(".extra-val")?.value) || 0,
+        recibo: r.querySelector(".extra-chk")?.checked ? "Sim" : "Não",
+    }));
+
+    const data  = [];
+    const sec   = (t)       => data.push([t]);
+    const row   = (...cols) => data.push(cols);
+    const blank = ()        => data.push([]);
+
+    sec("DADOS DO PEDIDO");
+    row("Número do Pedido",  numPedido);
+    row("Cliente",           cliente);
+    row("Data",              new Date().toLocaleDateString("pt-BR"));
+    row("Observação",        observacao);
+    row("Quantidade de cópias", v.quantidade);
+    blank();
+
+    sec("PEÇAS");
+    row("Nome", "Tempo (1×)", "Peso (g) (1×)");
+    pecas.forEach(p => row(p.nome, p.horas, Number(p.peso) || 0));
+    if (v.quantidade > 1) row(`TOTAL (×${v.quantidade})`, "—", "Ver custos calculados");
+    blank();
+
+    if (extras.length) {
+        sec("OUTROS CUSTOS");
+        row("Descrição", "Valor (R$)", "Inclui no Recibo");
+        extras.forEach(e => row(e.desc, e.val, e.recibo));
+        blank();
+    }
+
+    sec("PARÂMETROS DE ENTRADA");
+    row("Quantidade de cópias",        v.quantidade);
+    row("Filamento (R$/kg)",           val("p_filamento"));
+    row("Potência (W)",                val("p_watts"));
+    row("Taxa Energia (R$/kWh)",       val("p_kwh"));
+    row("Consumo Calculado (kWh)",     v.consumoKwh);
+    row("Rolo Embalagem (R$)",         val("p_rolo_embalagem"));
+    row("Embalagens por Rolo",         val("p_embalagens_rolo"));
+    row("Unidades/Mês",                val("p_unidades_mes"));
+    row("Custo Fixo Mensal (R$)",      val("p_custo_fixo"));
+    row("Impressora (R$)",             val("p_impressora"));
+    row("Vida Útil (horas)",           val("p_vida_util"));
+    row("Taxa de Falha (%)",           val("p_falha"));
+    row("Imposto (%)",                 val("p_imposto"));
+    row("Taxa Cartão (%)",             val("p_cartao"));
+    row("Custo Anúncio (%)",           val("p_anuncio"));
+    row("Markup (×)",                  val("p_markup"));
+    row("Frete (R$)",                  val("p_frete"));
+    row("Taxa Shopee (%)",             val("p_taxa_shopee"));
+    row("Taxa Mercado Livre (%)",      val("p_taxa_ml"));
+    row("Taxa TikTok Shop (%)",        val("p_taxa_tiktok"));
+    row("% de Lucro",                  val("p_lucro_pct"));
+    row("Preço de Venda Manual (R$)",  val("p_preco_venda_manual"));
+    blank();
+
+    sec("CUSTOS CALCULADOS");
+    row("Filamento",              v.custoFilamento);
+    row("Energia",                v.custoEnergia);
+    row("Embalagem",              v.custoEmbalagem);
+    row("Custo Fixo",             v.custoFixo);
+    row("Amortização",            v.amortizacao);
+    row("Extras",                 v.totalExtras);
+    row("Frete",                  v.frete);
+    row(`Falhas (${v.taxaFalha}%)`, v.custoFalhas);
+    row("CUSTO TOTAL",            v.custoTotal);
+    if (v.quantidade > 1) row(`Custo por unidade (÷${v.quantidade})`, v.custoUnitario);
+    blank();
+
+    sec("LUCRO");
+    row("% de Lucro",                 v.lucroPct);
+    row("Preço Sugerido (R$)",        v.precoSugerido);
+    row("Preço de Venda Manual (R$)", v.precoVendaManual);
+    row("Lucro Total (R$)",           v.lucroTotal);
+    blank();
+
+    sec("PRECIFICAÇÃO");
+    row("", "Preço (R$)", "Lucro Bruto (R$)", "Lucro Líquido (R$)");
+    row("Consumidor Final", v.precoVenda,   v.lucroBruto, v.lucroLiquido);
+    row("Lojista (50%)",    v.precoLojista, "",           v.lucroLiquidoLojista);
+    blank();
+
+    sec("MARKETPLACES");
+    row("Plataforma", "Taxa (%)", "Preço (R$)", "Lucro Líquido (R$)");
+    if (v.taxaShopee  > 0) row("Shopee",       v.taxaShopee,  v.precoShopee,  v.lucroShopee);
+    if (v.taxaML      > 0) row("Mercado Livre", v.taxaML,      v.precoML,      v.lucroML);
+    if (v.taxaTikTok  > 0) row("TikTok Shop",   v.taxaTikTok,  v.precoTikTok,  v.lucroTikTok);
+    blank();
+
+    sec("TAXAS SOBRE VENDA");
+    row("Descrição", "Taxa (%)", "Valor (R$)");
+    row("Imposto",  v.imposto,      v.valorImposto);
+    row("Cartão",   v.taxaCartao,   v.valorCartao);
+    row("Anúncio",  v.custoAnuncio, v.valorAnuncio);
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{ wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cálculo 3D");
+
+    const slugPedido  = numPedido.replace(/[^a-z0-9]/gi, "_");
+    const slugCliente = cliente.replace(/[^a-z0-9]/gi, "_");
+    const slugBase    = [slugPedido, slugCliente].filter(Boolean).join("_") || "calculo";
+    const filename    = `calculo_${slugBase}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
 }

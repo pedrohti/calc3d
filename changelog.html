@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog — Calculadora 3D</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d1117;
+      --bg-surface:   #161b22;
+      --bg-surface2:  #21262d;
+      --border:       #30363d;
+      --text:         #e6edf3;
+      --text-muted:   #8b949e;
+      --text-subtle:  #6e7681;
+      --primary:      #2f81f7;
+      --primary-dim:  #1f6feb;
+      --green:        #3fb950;
+      --green-dim:    #238636;
+      --green-bg:     rgba(63,185,80,0.1);
+      --green-border: rgba(63,185,80,0.3);
+      --purple:       #bc8cff;
+      --purple-bg:    rgba(188,140,255,0.1);
+      --purple-border:rgba(188,140,255,0.3);
+      --orange:       #e3b341;
+      --orange-bg:    rgba(227,179,65,0.1);
+      --orange-border:rgba(227,179,65,0.3);
+      --blue-bg:      rgba(47,129,247,0.1);
+      --blue-border:  rgba(47,129,247,0.3);
+      --tag-radius:   6px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .page-header a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s;
+    }
+    .page-header a:hover { color: var(--text); }
+    .page-header .sep { color: var(--text-subtle); }
+    .page-header .current { color: var(--text); font-weight: 600; font-size: 14px; }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1012px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-title svg { color: var(--text-muted); }
+
+    /* ── Timeline ── */
+    .releases { display: flex; flex-direction: column; gap: 0; }
+
+    .release {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+    }
+    .release:first-child { border-top: none; padding-top: 0; }
+
+    /* ── Sidebar do release ── */
+    .release-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 4px;
+    }
+
+    .release-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .release-tag .tag-icon { font-size: 16px; opacity: 0.7; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .badge-latest {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+    .badge-prerelease {
+      background: var(--orange-bg);
+      color: var(--orange);
+      border: 1px solid var(--orange-border);
+    }
+
+    .release-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .release-commit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .release-commit code {
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      color: var(--primary);
+    }
+
+    /* ── Corpo do release ── */
+    .release-body { min-width: 0; }
+
+    .release-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .release-description {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    /* ── Grupo de mudanças ── */
+    .change-group { margin-bottom: 20px; }
+
+    .change-group-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .change-group-title.new     { color: var(--green); }
+    .change-group-title.fix     { color: #f85149; }
+    .change-group-title.improve { color: var(--primary); }
+    .change-group-title.internal{ color: var(--purple); }
+
+    .change-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .change-list li {
+      font-size: 14px;
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .change-list li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+
+    .change-list li .ch-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ch-new     { background: var(--green-bg);   color: var(--green);   border: 1px solid var(--green-border); }
+    .ch-fix     { background: rgba(248,81,73,.1); color: #f85149;        border: 1px solid rgba(248,81,73,.3); }
+    .ch-improve { background: var(--blue-bg);     color: var(--primary); border: 1px solid var(--blue-border); }
+
+    /* ── Comparar link ── */
+    .full-changelog {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .full-changelog a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .full-changelog a:hover { text-decoration: underline; }
+
+    /* ── PR reference ── */
+    .pr-ref {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0px 6px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* ── Contributor ── */
+    .contributors {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3fb950, #2f81f7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .release { grid-template-columns: 1fr; }
+      .release-meta { flex-direction: row; flex-wrap: wrap; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+      .release-tag { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header breadcrumb -->
+  <header class="page-header">
+    <a href="index.html">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1H11Z"/></svg>
+      Calculadora 3D
+    </a>
+    <span class="sep">/</span>
+    <span class="current">Releases</span>
+  </header>
+
+  <div class="container">
+    <h1 class="page-title">
+      <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 7.775V2.75a.25.25 0 0 1 .25-.25h5.025a.25.25 0 0 1 .177.073l6.25 6.25a.25.25 0 0 1 0 .354l-5.025 5.025a.25.25 0 0 1-.354 0l-6.25-6.25a.25.25 0 0 1-.073-.177Zm-1.5 0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.75 1.75 0 0 1 1 7.775ZM6 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg>
+      Releases
+    </h1>
+
+    <div class="releases">
+
+      <!-- ══════════════════════════════════════════
+           v1.4.0
+      ══════════════════════════════════════════ -->
+      <div class="release">
+        <div class="release-meta">
+          <a class="release-tag" href="#">
+            <span class="tag-icon">🏷</span> v1.4.0
+          </a>
+          <span class="badge badge-latest">Latest</span>
+          <span class="release-date">26 de maio de 2026</span>
+          <div class="release-commit">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5h-3.32Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"/></svg>
+            <code>20ec7fe</code>
+          </div>
+        </div>
+
+        <div class="release-body">
+          <h2 class="release-title">Multiplicador por Peça</h2>
+          <p class="release-description">
+            Agora é possível definir a quantidade de cópias por linha de peça diretamente na calculadora.
+            Imprimir 10 chaveiros não exige mais duplicar linhas — basta informar a quantidade e o cálculo
+            de tempo e peso é feito automaticamente.
+          </p>
+
+          <div class="change-group">
+            <div class="change-group-title new">✨ Novidades</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Campo <strong>Qtd</strong> adicionado em cada linha de peça — multiplica tempo e peso individualmente por linha
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Custo por unidade</strong> exibido automaticamente nos resultados quando quantidade total &gt; 1
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Embalagem e Custo Fixo escalam pelo total de unidades do pedido
+              </li>
+            </ul>
+          </div>
+
+          <div class="change-group">
+            <div class="change-group-title improve">🔧 Melhorias</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Excel e Recibo exibem a quantidade por linha e o total de cópias do pedido
+              </li>
+            </ul>
+          </div>
+
+          <div class="contributors">
+            <span class="avatar">P</span>
+            <span>Contribuição: <strong>Pedro</strong> &nbsp;·&nbsp; PR <span class="pr-ref">#3</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           v1.3.0
+      ══════════════════════════════════════════ -->
+      <div class="release">
+        <div class="release-meta">
+          <a class="release-tag" href="#">
+            <span class="tag-icon">🏷</span> v1.3.0
+          </a>
+          <span class="release-date">21 de maio de 2026</span>
+          <div class="release-commit">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5h-3.32Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"/></svg>
+            <code>7b131b4</code>
+          </div>
+        </div>
+
+        <div class="release-body">
+          <h2 class="release-title">Nome do Cliente nos Arquivos Exportados</h2>
+          <p class="release-description">
+            Os arquivos gerados pela calculadora agora incluem o nome do cliente no nome do arquivo,
+            facilitando a organização e identificação dos orçamentos salvos.
+          </p>
+
+          <div class="change-group">
+            <div class="change-group-title improve">🔧 Melhorias</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Nome do cliente incluído no filename do <strong>Recibo</strong> gerado (ex: <code>Recibo_#123_Joao.html</code>)
+              </li>
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Nome do cliente incluído no filename do <strong>PDF</strong> (Salvar Cálculo)
+              </li>
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Nome do cliente incluído no filename do <strong>Excel</strong> exportado
+              </li>
+            </ul>
+          </div>
+
+          <div class="contributors">
+            <span class="avatar">P</span>
+            <span>Contribuição: <strong>Pedro</strong> &nbsp;·&nbsp; PR <span class="pr-ref">#2</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           v1.2.0
+      ══════════════════════════════════════════ -->
+      <div class="release">
+        <div class="release-meta">
+          <a class="release-tag" href="#">
+            <span class="tag-icon">🏷</span> v1.2.0
+          </a>
+          <span class="release-date">21 de maio de 2026</span>
+          <div class="release-commit">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5h-3.32Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"/></svg>
+            <code>ef2535b</code>
+          </div>
+        </div>
+
+        <div class="release-body">
+          <h2 class="release-title">Calculadora Completa — v3</h2>
+          <p class="release-description">
+            Maior atualização da calculadora desde o lançamento. Reescrita completa com novos painéis de custo,
+            suporte a múltiplas peças por pedido, marketplaces, amortização da impressora e exportação de dados.
+          </p>
+
+          <div class="change-group">
+            <div class="change-group-title new">✨ Novidades</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Múltiplas peças por pedido</strong> — adicione quantas linhas quiser com nome, tempo e peso individuais
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Painel <strong>Embalagem e Custos Fixos</strong> — rateio automático de custo fixo mensal e custo de embalagem por unidade
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Painel <strong>Amortização da Impressora</strong> — cálculo automático do custo por hora de uso da impressora
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Taxas de Marketplace</strong> — Shopee, Mercado Livre e TikTok Shop com preço e lucro calculados para cada plataforma
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Campos de <strong>Imposto, Taxa de Cartão e Custo de Anúncio</strong> (% sobre o preço de venda)
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Markup</strong> (multiplicador de custo) para precificação rápida
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Outros Custos</strong> — campos extras dinâmicos para pintura, lixa, acabamento etc., com opção de incluir no recibo
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Botão <strong>Gerar Recibo</strong> — recibo imprimível formatado com itens e total
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Botão <strong>Salvar Cálculo</strong> — relatório completo em HTML para salvar/imprimir
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Botão <strong>Exportar Excel</strong> — planilha .xlsx com todos os parâmetros e resultados
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Preço sugerido por % de lucro</strong> e campo de preço de venda manual com lucro calculado em tempo real
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Preço Lojista</strong> (50% do consumidor final) com lucro líquido calculado
+              </li>
+            </ul>
+          </div>
+
+          <div class="change-group">
+            <div class="change-group-title improve">🔧 Melhorias</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Painéis <strong>recolhíveis</strong> (clique no header para colapsar/expandir)
+              </li>
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                <strong>Tooltips</strong> (?) em todos os campos explicando o que cada input representa
+              </li>
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Suporte a entrada de tempo no formato <code>3:30</code> (horas:minutos) além de <code>2.5</code> (decimal)
+              </li>
+              <li>
+                <span class="ch-tag ch-improve">improve</span>
+                Resultados atualizados em <strong>tempo real</strong> a cada alteração de campo
+              </li>
+            </ul>
+          </div>
+
+          <div class="contributors">
+            <span class="avatar">P</span>
+            <span>Contribuição: <strong>Pedro</strong> &nbsp;·&nbsp; PR <span class="pr-ref">#1</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           v1.0.0
+      ══════════════════════════════════════════ -->
+      <div class="release">
+        <div class="release-meta">
+          <a class="release-tag" href="#">
+            <span class="tag-icon">🏷</span> v1.0.0
+          </a>
+          <span class="release-date">21 de maio de 2026</span>
+          <div class="release-commit">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5h-3.32Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"/></svg>
+            <code>ba52b99</code>
+          </div>
+        </div>
+
+        <div class="release-body">
+          <h2 class="release-title">Lançamento Inicial</h2>
+          <p class="release-description">
+            Primeira versão pública da Calculadora 3D como aplicação web estática.
+            Migração do projeto original em Google Apps Script para uma stack simples de HTML/CSS/JS.
+          </p>
+
+          <div class="change-group">
+            <div class="change-group-title new">✨ Novidades</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Calculadora de custo de impressão 3D com campos de <strong>filamento</strong> (R$/kg × peso) e <strong>energia</strong> (kWh × potência × tempo)
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Campo de <strong>Taxa de Falha</strong> (%) para cobrir impressões que precisam ser refeitas
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Painel de resultados em tempo real com <strong>custo total</strong> e <strong>preço de venda sugerido</strong>
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                <strong>Tema escuro</strong> nativo (dark mode)
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Dados do pedido: número gerado automaticamente e campo de cliente
+              </li>
+              <li>
+                <span class="ch-tag ch-new">new</span>
+                Geração de número de pedido aleatório por sessão
+              </li>
+            </ul>
+          </div>
+
+          <div class="contributors">
+            <span class="avatar">P</span>
+            <span>Contribuição: <strong>Pedro</strong></span>
+          </div>
+
+          <div class="full-changelog">
+            🎉 Primeiro release — sem histórico anterior para comparar.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /releases -->
+  </div><!-- /container -->
+
+</body>
+</html>
