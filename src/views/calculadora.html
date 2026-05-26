@@ -32,6 +32,7 @@
           <span class="peca-label-nome">Nome da Peça / Arquivo</span>
           <span class="peca-label-horas">Tempo (horas) <span class="tip" data-tip="Tempo total de impressão em horas. Use decimais: 12.5 = 12h30min">?</span></span>
           <span class="peca-label-peso">Peso (g) <span class="tip" data-tip="Peso final da peça em gramas — use o valor do seu slicer">?</span></span>
+          <span class="peca-label-qtd">Qtd <span class="tip" data-tip="Quantidade de cópias desta peça. Multiplica tempo e peso automaticamente.">?</span></span>
           <span class="peca-label-btn"></span>
         </div>
         <div id="container-pecas">
@@ -39,6 +40,7 @@
             <input type="text" class="peca-nome" placeholder="ex: Suporte de Fone">
             <input type="text" class="peca-horas" placeholder="ex: 3:30 ou 2.5" oninput="calcular()">
             <input type="number" class="peca-peso" placeholder="0" step="0.01" oninput="calcular()">
+            <input type="number" class="peca-qtd" value="1" min="1" step="1" oninput="calcular()">
             <button type="button" class="btn-remove" onclick="removerPeca(this)" style="visibility:hidden">✕</button>
           </div>
         </div>
@@ -205,6 +207,7 @@
           <div class="result-row"><span>Frete:</span><span id="res_frete">R$ 0,00</span></div>
           <div class="result-row"><span>Falhas (<span id="lbl_falha">15</span>%):</span><span id="res_falhas">R$ 0,00</span></div>
           <div class="result-row result-total"><span>CUSTO TOTAL:</span><span id="res_custo_total">R$ 0,00</span></div>
+          <div class="result-row" id="row_custo_unitario" style="display:none; color: var(--text-muted); font-size:0.85em;"><span>↳ Por unidade (<span id="lbl_quantidade">1</span>×):</span><span id="res_custo_unitario">R$ 0,00</span></div>
         </div>
 
         <h3 class="section-title" style="margin-top: 24px;">💸 Lucro</h3>
@@ -274,6 +277,7 @@
         <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
           <button type="button" class="btn-save" onclick="gerarRecibo()">🧾 Gerar Recibo</button>
           <button type="button" class="btn-save" onclick="salvarCalculo()">💾 Salvar Cálculo</button>
+          <button type="button" class="btn-save" onclick="exportarExcel()">📊 Exportar Excel</button>
           <!-- TODO: Enviar via WhatsApp -->
           <!-- TODO: Enviar via email -->
         </div>

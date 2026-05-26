@@ -234,6 +234,7 @@ input::placeholder {
 }
 .peca-label-nome { flex: 3; }
 .peca-label-horas, .peca-label-peso { flex: 1.5; min-width: 0; }
+.peca-label-qtd { width: 55px; flex-shrink: 0; text-align: center; }
 .peca-label-btn { width: 38px; flex-shrink: 0; }
 
 .peca-row {
@@ -244,6 +245,7 @@ input::placeholder {
 }
 .peca-nome { flex: 3; }
 .peca-horas, .peca-peso { flex: 1.5; min-width: 0; }
+.peca-qtd { width: 55px; flex-shrink: 0; text-align: center; }
 
 .btn-remove {
   background: var(--danger);
