@@ -104,9 +104,10 @@ function calcularValores() {
     const custoAnuncio = val("p_anuncio");
     const markup      = Math.max(val("p_markup"), 1);
 
-    const custoBase   = custoFilamento + custoEnergia + custoEmbalagem + custoFixo + amortizacao + totalExtras + frete;
-    const custoFalhas = custoBase * (taxaFalha / 100);
-    const custoTotal  = custoBase + custoFalhas;
+    // falha só reimprime: filamento + energia + desgaste da impressora
+    const custoImpressao = custoFilamento + custoEnergia + amortizacao;
+    const custoFalhas = custoImpressao * (taxaFalha / 100);
+    const custoTotal  = custoImpressao + custoFalhas + custoEmbalagem + custoFixo + totalExtras + frete;
 
     const precoVenda    = custoTotal * markup;
     const valorImposto  = precoVenda * (imposto / 100);
@@ -121,20 +122,20 @@ function calcularValores() {
 const lucroPct         = val("p_lucro_pct");
     const precoSugerido    = custoTotal * (1 + lucroPct / 100);
     const precoVendaManual = val("p_preco_venda_manual");
-    const lucroTotal       = precoVendaManual - custoTotal;
+    const lucroTotal       = (precoVendaManual > 0 ? precoVendaManual : precoSugerido) - custoTotal;
 
     const taxaShopee    = val("p_taxa_shopee");
     const taxaML        = val("p_taxa_ml");
     const taxaTikTok    = val("p_taxa_tiktok");
-    const feeShopee     = precoVenda * taxaShopee  / 100;
-    const feeML         = precoVenda * taxaML      / 100;
-    const feeTikTok     = precoVenda * taxaTikTok  / 100;
-    const precoShopee   = precoVenda + feeShopee;
-    const precoML       = precoVenda + feeML;
-    const precoTikTok   = precoVenda + feeTikTok;
-    const lucroShopee   = precoShopee  - feeShopee;
-    const lucroML       = precoML      - feeML;
-    const lucroTikTok   = precoTikTok  - feeTikTok;
+    // taxa incide sobre o preço anunciado: preço = precoVenda / (1 - taxa) para receber precoVenda líquido
+    const precoMk = (taxa) => precoVenda / (1 - taxa / 100);
+    const lucroMk = (preco, taxa) => preco - preco * taxa / 100 - preco * imposto / 100 - custoTotal;
+    const precoShopee   = precoMk(taxaShopee);
+    const precoML       = precoMk(taxaML);
+    const precoTikTok   = precoMk(taxaTikTok);
+    const lucroShopee   = lucroMk(precoShopee, taxaShopee);
+    const lucroML       = lucroMk(precoML,     taxaML);
+    const lucroTikTok   = lucroMk(precoTikTok, taxaTikTok);
 
     const custoUnitario = custoTotal / quantidade;
     const precoUnitario = precoVenda / quantidade;
