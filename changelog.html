@@ -307,6 +307,54 @@
     <div class="releases">
 
       <!-- ══════════════════════════════════════════
+           v1.4.2
+      ══════════════════════════════════════════ -->
+      <div class="release">
+        <div class="release-meta">
+          <a class="release-tag" href="#">
+            <span class="tag-icon">🏷</span> v1.4.2
+          </a>
+          <span class="badge badge-latest">Latest</span>
+          <span class="release-date">10 de outubro de 2026</span>
+          <div class="release-commit">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5h-3.32Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"/></svg>
+            <code>c0c48d2</code>
+          </div>
+        </div>
+
+        <div class="release-body">
+          <h2 class="release-title">Correção das Fórmulas</h2>
+          <p class="release-description">
+            Revisão dos cálculos de custo e lucro: taxa de falha, lucro nos marketplaces
+            e lucro total estavam somando valores indevidos.
+          </p>
+
+          <div class="change-group">
+            <div class="change-group-title fix">🐛 Correções</div>
+            <ul class="change-list">
+              <li>
+                <span class="ch-tag ch-fix">fix</span>
+                <strong>Taxa de Falha</strong> agora incide só sobre filamento, energia e amortização — antes incluía frete, embalagem, custo fixo e extras
+              </li>
+              <li>
+                <span class="ch-tag ch-fix">fix</span>
+                <strong>Lucro nos marketplaces</strong> não descontava o custo; agora desconta taxa, imposto e custo total, e o preço cobre a taxa (<code>preço ÷ (1 − taxa)</code>)
+              </li>
+              <li>
+                <span class="ch-tag ch-fix">fix</span>
+                <strong>Lucro Total</strong> usa o preço sugerido quando o preço de venda manual está vazio, em vez de mostrar valor negativo
+              </li>
+            </ul>
+          </div>
+
+          <div class="contributors">
+            <span class="avatar">P</span>
+            <span>Contribuição: <strong>Pedro</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
            v1.4.1
       ══════════════════════════════════════════ -->
       <div class="release">
@@ -314,7 +362,6 @@
           <a class="release-tag" href="#">
             <span class="tag-icon">🏷</span> v1.4.1
           </a>
-          <span class="badge badge-latest">Latest</span>
           <span class="release-date">21 de agosto de 2026</span>
           <div class="release-commit">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5h-3.32Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"/></svg>
